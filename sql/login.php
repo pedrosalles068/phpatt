@@ -36,10 +36,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $stmt->store_result();
 
                 if($stmt->num_rows == 1){
-                    $stmt->bind_result($id, $username, $hashed_password);
+                    $stmt->bind_result($id, $username, $db_password);
                     if($stmt->fetch()){
-                        // Verifica a senha
-                        if(password_verify($password, $hashed_password)){
+                        // Verifica a senha sem hash
+                        if($password === $db_password){
                             // Inicia a sessão e redireciona para a página inicial
                             session_start();
                             $_SESSION["loggedin"] = true;

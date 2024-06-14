@@ -4,35 +4,47 @@ $mensagem = "";
 $erro = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
     if (!empty($_POST['username']) && !empty($_POST['password']) && !empty($_POST['email'])) {
         // Obter os dados do formulário
         $username = $_POST['username'];
         $password = $_POST['password'];
         $email = $_POST['email'];
 
-
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $erro = "O e-mail fornecido é inválido.";
         } else {
+            // Verificar se o usuário ou e-mail já existem
+            $sql_check = "SELECT COUNT(*) FROM usuarios WHERE nome = :username OR email = :email";
+            if ($stmt_check = $conn->prepare($sql_check)) {
+                $stmt_check->bindValue(':username', $username);
+                $stmt_check->bindValue(':email', $email);
+                $stmt_check->execute();
+                $count = $stmt_check->fetchColumn();
 
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-            $sql = "INSERT INTO usuarios (nome, senha, email) VALUES (?, ?, ?)";
-
-            // Preparar e executar a declaração
-            if ($stmt = $conn->prepare($sql)) {
-                $stmt->bind_param("sss", $username, $hashed_password, $email);
-
-                if ($stmt->execute()) {
-                    $mensagem = "Usuário cadastrado com sucesso!";
+                if ($count > 0) {
+                    $erro = "Nome de usuário ou e-mail já estão em uso.";
                 } else {
-                    $erro = "Erro ao cadastrar o usuário: " . $stmt->error;
-                }
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-                $stmt->close();
+                    $sql_insert = "INSERT INTO usuarios (nome, senha, email) VALUES (:username, :password, :email)";
+
+                    // Preparar e executar a declaração
+                    if ($stmt_insert = $conn->prepare($sql_insert)) {
+                        $stmt_insert->bindValue(':username', $username);
+                        $stmt_insert->bindValue(':password', $hashed_password);
+                        $stmt_insert->bindValue(':email', $email);
+
+                        if ($stmt_insert->execute()) {
+                            $mensagem = "Usuário cadastrado com sucesso!";
+                        } else {
+                            $erro = "Erro ao cadastrar o usuário: " . $stmt_insert->errorInfo()[2];
+                        }
+                    } else {
+                        $erro = "Erro ao preparar a declaração: " . $conn->errorInfo()[2];
+                    }
+                }
             } else {
-                $erro = "Erro ao preparar a declaração: " . $conn->error;
+                $erro = "Erro ao preparar a verificação: " . $conn->errorInfo()[2];
             }
         }
     } else {
@@ -45,6 +57,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html>
 <head>
     <title>Cadastro de Usuário</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -134,7 +149,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <input type="submit" value="Cadastrar" id="submitBtn">
     </form>
-    <input type="button" value="Voltar para Página Inicial" onclick="window.location.href='pginicial.php';">
+    <input type="button" value="Voltar para Página Inicial" onclick="window.location.href='crud.php';">
 </div>
 
 </body>

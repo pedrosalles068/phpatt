@@ -13,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $erro = "O e-mail fornecido é inválido.";
         } else {
-            // Verificar se o usuário ou e-mail já existem
+
             $sql_check = "SELECT COUNT(*) FROM usuarios WHERE nome = :username OR email = :email";
             if ($stmt_check = $conn->prepare($sql_check)) {
                 $stmt_check->bindValue(':username', $username);
@@ -57,9 +57,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html>
 <head>
     <title>Cadastro de Usuário</title>
-    <!-- Bootstrap CSS -->
+
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
     <style>
         body {
             font-family: Arial, sans-serif;
